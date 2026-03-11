@@ -1276,10 +1276,15 @@ cflags += $(call grep_rdma_func_var, \
 		 , \
 		 include/rdma/ib_verbs.h)
 
-# Detect RHEL9 backport of blk_mode_t / gendisk-based open/release API
-# (originally upstream 6.0+; backported into RHEL9 5.14.0 kernels)
-cflags += $(call grep_ksrc_typedef, \
+# Detect RHEL9 backport of gendisk-based block_device_operations open/release API
+# (originally upstream 6.0+; backported into RHEL9 5.14.0 kernels).
+# Check whether block_device_operations.open takes struct gendisk * (new API)
+# rather than struct block_device * (old API).  This is more reliable than a
+# typedef check and correctly overrides the KERNEL_VERSION_GE(6,5,0) fallback
+# in kr_version.h for kernels that have the backport.
+cflags += $(call grep_ksrc_func_ptr_var, \
 		KS_HAS_BLKMODE, \
-		blk_mode_t, \
-		include/linux/blk_types.h)
+		open, \
+		gendisk, \
+		include/linux/blkdev.h)
 

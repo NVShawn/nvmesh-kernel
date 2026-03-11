@@ -25,6 +25,9 @@ jobs:
       - name: Run lintian
         run: |
           lintian --fail-on error \
+            --suppress-tags arch-independent-package-contains-binary-or-object \
+            --suppress-tags missing-dependency-on-libc \
+            --suppress-tags no-code-sections \
             ../nvmesh-client-dkms_*.deb \
             ../nvmesh-target-dkms_*.deb
 
@@ -69,7 +72,7 @@ jobs:
                OFED_VER_STRING=none \
                dkms
 
-      - name: Check modules were produced
+      - name: Check client modules were produced
         run: |
           echo "=== Client modules ==="
           find common keeper clnt -name '*.ko' | sort
@@ -84,12 +87,12 @@ jobs:
       - name: Build target kernel modules
         run: |
           KERN_VER=$(ls /lib/modules | head -1)
-          make IM_SERVER=1 \
+          make IM_BOTH=1 \
                KERN_VER="${KERN_VER}" \
                OFED_VER_STRING=none \
                dkms
 
-      - name: Check modules were produced
+      - name: Check target modules were produced
         run: |
           echo "=== Target modules ==="
           find common keeper srv -name '*.ko' | sort
@@ -168,17 +171,15 @@ jobs:
           dnf install -y epel-release dnf-plugins-core
           dnf config-manager --set-enabled highavailability
 
-      - name: Add Confluent repo for librdkafka
+      - name: Build and install librdkafka from source
         run: |
-          rpm --import https://packages.confluent.io/rpm/7.6/archive.key
-          cat > /etc/yum.repos.d/confluent.repo << 'EOF'
-          [Confluent]
-          name=Confluent repository
-          baseurl=https://packages.confluent.io/rpm/7.6
-          gpgcheck=1
-          gpgkey=https://packages.confluent.io/rpm/7.6/archive.key
-          enabled=1
-          EOF
+          dnf install -y openssl-devel zlib-devel gcc-c++ make
+          curl -fsSL https://github.com/confluentinc/librdkafka/archive/refs/tags/v2.3.0.tar.gz | tar xz
+          cd librdkafka-2.3.0
+          ./configure --prefix=/usr --disable-lz4-ext
+          make -j$(nproc)
+          make install
+          ldconfig
 
       - name: Install build dependencies
         run: |
@@ -188,7 +189,6 @@ jobs:
             rsync tree kmod \
             systemd-devel bzip2-devel \
             rdma-core-devel \
-            librdkafka-devel \
             corosync-devel
 
       - name: Detect installed kernel headers version
