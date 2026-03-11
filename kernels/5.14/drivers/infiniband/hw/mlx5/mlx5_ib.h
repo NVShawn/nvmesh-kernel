@@ -24,6 +24,16 @@
 #include <rdma/mlx5_user_ioctl_cmds.h>
 #include <rdma/mlx5_user_ioctl_verbs.h>
 
+/* RHEL9 5.14.0-427+ backported mlx5_core_mkey into its own header */
+#if __has_include(<linux/mlx5/mkey.h>)
+#include <linux/mlx5/mkey.h>
+#endif
+
+/* RHEL9 backport renamed MAX_MR_CACHE_ENTRIES to MAX_MKEY_CACHE_ENTRIES */
+#ifndef MAX_MR_CACHE_ENTRIES
+#define MAX_MR_CACHE_ENTRIES MAX_MKEY_CACHE_ENTRIES
+#endif
+
 #include "srq.h"
 
 #define mlx5_ib_dbg(_dev, format, arg...)                                      \

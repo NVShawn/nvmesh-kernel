@@ -28,6 +28,7 @@ jobs:
             --suppress-tags arch-independent-package-contains-binary-or-object \
             --suppress-tags missing-dependency-on-libc \
             --suppress-tags no-code-sections \
+            --suppress-tags unstripped-binary-or-object \
             ../nvmesh-client-dkms_*.deb \
             ../nvmesh-target-dkms_*.deb
 
@@ -173,7 +174,7 @@ jobs:
 
       - name: Build and install librdkafka from source
         run: |
-          dnf install -y openssl-devel zlib-devel gcc-c++ make
+          dnf install -y openssl-devel zlib-devel gcc-c++ make diffutils which
           curl -fsSL https://github.com/confluentinc/librdkafka/archive/refs/tags/v2.3.0.tar.gz | tar xz
           cd librdkafka-2.3.0
           ./configure --prefix=/usr --disable-lz4-ext
