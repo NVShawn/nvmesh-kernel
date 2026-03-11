@@ -1,0 +1,96 @@
+name: Debian Package Build
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  build-debs:
+    name: Build .deb packages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            debhelper devscripts lintian
+
+      - name: Build binary packages
+        run: dpkg-buildpackage --no-sign -us -uc --build=binary
+
+      - name: Run lintian
+        run: |
+          lintian --fail-on error \
+            ../nvmesh-client-dkms_*.deb \
+            ../nvmesh-target-dkms_*.deb
+
+      - name: Upload .deb artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-packages
+          path: |
+            ../nvmesh-client-dkms_*.deb
+            ../nvmesh-target-dkms_*.deb
+          retention-days: 7
+
+  build-modules:
+    name: Build kernel modules (${{ matrix.os }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-22.04
+          - ubuntu-24.04
+    container:
+      image: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          apt-get update -qq
+          apt-get install -y --no-install-recommends \
+            build-essential python3 \
+            linux-headers-generic \
+            kmod
+
+      - name: Build client kernel modules
+        run: |
+          KERN_VER=$(ls /lib/modules | head -1)
+          make IM_CLIENT=1 \
+               KERN_VER="${KERN_VER}" \
+               OFED_VER_STRING=none \
+               dkms
+
+      - name: Check modules were produced
+        run: |
+          echo "=== Client modules ==="
+          find common keeper clnt -name '*.ko' | sort
+          test -f common/nvmeib_common.ko
+          test -f keeper/nvmeib_keeper.ko
+          test -f clnt/atom/nvmeiba.ko
+          test -f clnt/nvmeibc.ko
+
+      - name: Clean between builds
+        run: make clean 2>/dev/null || true
+
+      - name: Build target kernel modules
+        run: |
+          KERN_VER=$(ls /lib/modules | head -1)
+          make IM_SERVER=1 \
+               KERN_VER="${KERN_VER}" \
+               OFED_VER_STRING=none \
+               dkms
+
+      - name: Check modules were produced
+        run: |
+          echo "=== Target modules ==="
+          find common keeper srv -name '*.ko' | sort
+          test -f common/nvmeib_common.ko
+          test -f keeper/nvmeib_keeper.ko
+          test -f srv/nvmeibs.ko
