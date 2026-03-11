@@ -1,0 +1,36 @@
+Source: nvmesh-kernel
+Section: kernel
+Priority: optional
+Maintainer: NVIDIA Corporation <linux-kernel@nvidia.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+
+Package: nvmesh-client-dkms
+Architecture: all
+Depends: dkms, python3 (>= 3.8), ${misc:Depends}
+Recommends: linux-headers-generic
+Description: NVMesh client kernel modules (DKMS)
+ Provides the NVMesh client kernel modules, built via DKMS for the
+ running kernel. Installs the following modules:
+  - nvmeibc  (NVMesh IB client block driver)
+  - nvmeiba  (NVMesh IB client atom driver)
+  - nvmeib_common (NVMesh IB common)
+  - nvmeib_keeper (NVMesh IB keeper)
+  - nvmeib_common_public (NVMesh IB public common)
+  - nvmeib_common_mlx5_public (NVMesh MLX5 public)
+  - nvmeib_common_mlx4_public (NVMesh MLX4 public, when OFED < 5.1)
+
+Package: nvmesh-target-dkms
+Architecture: all
+Depends: dkms, python3 (>= 3.8), ${misc:Depends}
+Recommends: linux-headers-generic
+Description: NVMesh target kernel modules (DKMS)
+ Provides the NVMesh target kernel modules, built via DKMS for the
+ running kernel. Installs the following modules:
+  - nvmeibs  (NVMesh IB server/target driver)
+  - nvmeib_common (NVMesh IB common)
+  - nvmeib_keeper (NVMesh IB keeper)
+  - nvmeib_common_public (NVMesh IB public common)
+  - nvmeib_common_mlx5_public (NVMesh MLX5 public)
+  - nvmeib_common_mlx4_public (NVMesh MLX4 public, when OFED < 5.1)

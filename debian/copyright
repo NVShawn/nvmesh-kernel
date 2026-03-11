@@ -1,0 +1,23 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: nvmesh-kernel
+Upstream-Contact: NVIDIA Corporation <linux-kernel@nvidia.com>
+Source: https://github.com/Excelero/nvmesh-kernel
+
+Files: *
+Copyright: 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+License: GPL-2.0-only or Apache-2.0
+
+License: GPL-2.0-only
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License version 2 as
+ published by the Free Software Foundation.
+ .
+ On Debian systems, the full text of the GNU General Public License
+ version 2 can be found in the file '/usr/share/common-licenses/GPL-2'.
+
+License: Apache-2.0
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ .
+ On Debian systems, the full text of the Apache License version 2.0
+ can be found in the file '/usr/share/common-licenses/Apache-2.0'.

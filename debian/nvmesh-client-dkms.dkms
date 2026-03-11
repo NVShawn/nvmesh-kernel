@@ -1,0 +1,31 @@
+PACKAGE_NAME="nvmesh-client"
+PACKAGE_VERSION="3.4.0"
+
+MAKE[0]="make IM_CLIENT=1 KERN_VER=$kernelver _KSRC=$kernel_source_dir OFED_VER_STRING=none dkms"
+CLEAN="make -C $kernel_source_dir M=$(pwd) clean 2>/dev/null || true"
+
+BUILT_MODULE_NAME[0]="nvmeib_common"
+BUILT_MODULE_LOCATION[0]="common/"
+DEST_MODULE_LOCATION[0]="/extra/nvmesh/common"
+
+BUILT_MODULE_NAME[1]="nvmeib_keeper"
+BUILT_MODULE_LOCATION[1]="keeper/"
+DEST_MODULE_LOCATION[1]="/extra/nvmesh/keeper"
+
+BUILT_MODULE_NAME[2]="nvmeib_common_public"
+BUILT_MODULE_LOCATION[2]="common_public/"
+DEST_MODULE_LOCATION[2]="/extra/nvmesh/common_public"
+
+BUILT_MODULE_NAME[3]="nvmeib_common_mlx5_public"
+BUILT_MODULE_LOCATION[3]="common_public/"
+DEST_MODULE_LOCATION[3]="/extra/nvmesh/common_public"
+
+BUILT_MODULE_NAME[4]="nvmeiba"
+BUILT_MODULE_LOCATION[4]="clnt/atom/"
+DEST_MODULE_LOCATION[4]="/extra/nvmesh/client/atom"
+
+BUILT_MODULE_NAME[5]="nvmeibc"
+BUILT_MODULE_LOCATION[5]="clnt/"
+DEST_MODULE_LOCATION[5]="/extra/nvmesh/client"
+
+AUTOINSTALL="yes"

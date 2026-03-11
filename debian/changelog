@@ -1,0 +1,5 @@
+nvmesh-kernel (3.4.0-1) unstable; urgency=medium
+
+  * Initial Debian/Ubuntu DKMS packaging.
+
+ -- NVIDIA Corporation <linux-kernel@nvidia.com>  Tue, 10 Mar 2026 00:00:00 +0000

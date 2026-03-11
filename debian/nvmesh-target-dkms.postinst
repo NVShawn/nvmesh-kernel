@@ -1,0 +1,21 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+set -e
+
+PACKAGE="nvmesh-target"
+VERSION="3.4.0"
+SRC_DIR="/usr/src/${PACKAGE}-${VERSION}"
+
+case "$1" in
+    configure)
+        if which dkms > /dev/null 2>&1; then
+            dkms remove "${PACKAGE}/${VERSION}" --all 2>/dev/null || true
+            dkms add "${SRC_DIR}"
+            dkms build "${PACKAGE}/${VERSION}" || true
+            dkms install "${PACKAGE}/${VERSION}" --force || true
+        fi
+        ;;
+esac
+
+#DEBHELPER#

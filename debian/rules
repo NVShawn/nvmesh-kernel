@@ -1,0 +1,39 @@
+#!/usr/bin/make -f
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+PKG_VERSION    := $(shell dpkg-parsechangelog -S Version | sed 's/-[0-9]*$$//')
+CLIENT_PKG     := nvmesh-client-dkms
+TARGET_PKG     := nvmesh-target-dkms
+CLIENT_SRC_DIR := debian/$(CLIENT_PKG)/usr/src/nvmesh-client-$(PKG_VERSION)
+TARGET_SRC_DIR := debian/$(TARGET_PKG)/usr/src/nvmesh-target-$(PKG_VERSION)
+
+# Files/directories to exclude from the DKMS source tree
+EXCLUDE := --exclude=debian --exclude=.git --exclude='*.o' \
+           --exclude='*.ko' --exclude='*.mod.c' --exclude='*.cmd' \
+           --exclude='.tmp_versions' --exclude='Module.symvers' \
+           --exclude='modules.order'
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	# Nothing to build at package-build time; DKMS builds on the target system.
+
+override_dh_auto_install:
+	# --- nvmesh-client-dkms source tree ---
+	install -d $(CLIENT_SRC_DIR)
+	cp -a $(shell ls -1 | grep -vE '^debian$$') $(CLIENT_SRC_DIR)/
+	install -m 0644 debian/$(CLIENT_PKG).dkms $(CLIENT_SRC_DIR)/dkms.conf
+
+	# --- nvmesh-target-dkms source tree ---
+	install -d $(TARGET_SRC_DIR)
+	cp -a $(shell ls -1 | grep -vE '^debian$$') $(TARGET_SRC_DIR)/
+	install -m 0644 debian/$(TARGET_PKG).dkms $(TARGET_SRC_DIR)/dkms.conf
+
+override_dh_auto_test:
+	# No tests at package-build time.
+
+override_dh_auto_clean:
+	# Clean build artifacts from source tree without touching debian/.
+	$(MAKE) -C $(CURDIR) clean 2>/dev/null || true

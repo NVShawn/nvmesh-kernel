@@ -1321,7 +1321,21 @@ endif
 	$(VV)$(BUILD_RPM)
 	$(VV)$(CREATE_VERSION)
 
-.PHONY: clean install
+.PHONY: clean install dkms
+
+# DKMS build target: runs only autogen + kernel modules (skips userspace tools)
+dkms:
+	$(info ============== DKMS Build Configuration ================)
+	$(info CC: $(shell which $(CC)) - $(shell $(CC)  --version | head -1))
+	$(info Kernel: $(KERN_VER) $(KSRC1))
+	$(info $(INFO_SERV_CLNT))
+	$(info ===================================================)
+	@$(call nconfig_save,$(configs))
+	$(COMPILE_AUTOGEN)
+	$(shell touch $(PWD)/clnt/block/datapath_ec/.nvmeibc_block_dp_ec_gf_asm.o.cmd)
+ifeq ($(BUILD_KERNEL_MODULES),yes)
+	$(COMPILE_MODULES)
+endif
 
 clean:
 	$(MAKE) -C $(KSRC) M=$(PWD) clean
