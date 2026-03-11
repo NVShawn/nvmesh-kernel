@@ -1275,4 +1275,11 @@ cflags += $(call grep_rdma_func_var, \
 		 ib_get_dma_mr, \
 		 , \
 		 include/rdma/ib_verbs.h)
- 
+
+# Detect RHEL9 backport of blk_mode_t / gendisk-based open/release API
+# (originally upstream 6.0+; backported into RHEL9 5.14.0 kernels)
+cflags += $(call grep_ksrc_typedef, \
+		KS_HAS_BLKMODE, \
+		blk_mode_t, \
+		include/linux/blk_types.h)
+
