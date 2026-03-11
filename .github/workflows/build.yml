@@ -1,4 +1,4 @@
-name: Debian Package Build
+name: Build and Package
 
 on:
   push:
@@ -94,3 +94,59 @@ jobs:
           test -f common/nvmeib_common.ko
           test -f keeper/nvmeib_keeper.ko
           test -f srv/nvmeibs.ko
+
+  build-client-rpm:
+    name: Build client RPM (Rocky Linux 9)
+    runs-on: ubuntu-latest
+    container:
+      image: rockylinux:9
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history needed so git describe can find the version tag
+          fetch-depth: 0
+
+      - name: Install build dependencies
+        run: |
+          dnf install -y \
+            gcc make python3 git \
+            kernel-devel rpmdevtools rpm-build \
+            rsync tree kmod
+
+      - name: Detect installed kernel headers version
+        run: |
+          KERN_VER=$(ls /usr/src/kernels | head -1)
+          echo "KERN_VER=${KERN_VER}" >> $GITHUB_ENV
+          echo "KSRC=/usr/src/kernels/${KERN_VER}" >> $GITHUB_ENV
+
+      - name: Build full client tree (modules + userspace tools)
+        run: |
+          make IM_CLIENT=1 \
+               KERN_VER="${KERN_VER}" \
+               _KSRC="${KSRC}" \
+               OFED_VER_STRING=none \
+               VERBOSE=false \
+               all
+
+      - name: Stub dist/pytools (populated by a separate pipeline in production)
+        run: mkdir -p dist/pytools
+
+      - name: Build client RPM
+        run: |
+          KERN_VER="${KERN_VER}" \
+          OFED_VER_STRING=none \
+          ./mk_client_rpm "${KERN_VER}" none
+
+      - name: Verify RPMs were produced
+        run: |
+          echo "=== Produced RPMs ==="
+          ls -lh nvmesh-*.rpm
+          test -n "$(ls nvmesh-client-*.rpm 2>/dev/null)"
+          test -n "$(ls nvmesh-base-*.rpm   2>/dev/null)"
+
+      - name: Upload RPM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpm-packages
+          path: nvmesh-*.rpm
+          retention-days: 7
