@@ -144,9 +144,69 @@ jobs:
           test -n "$(ls nvmesh-client-*.rpm 2>/dev/null)"
           test -n "$(ls nvmesh-base-*.rpm   2>/dev/null)"
 
-      - name: Upload RPM artifacts
+      - name: Upload client RPM artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: rpm-packages
+          name: rpm-packages-client
           path: nvmesh-*.rpm
+          retention-days: 7
+
+  build-target-rpm:
+    name: Build target RPM (Rocky Linux 9)
+    runs-on: ubuntu-latest
+    container:
+      image: rockylinux:9
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Enable EPEL and High Availability repos
+        run: |
+          dnf install -y epel-release dnf-plugins-core
+          dnf config-manager --set-enabled highavailability
+
+      - name: Install build dependencies
+        run: |
+          dnf install -y \
+            gcc make python3 git \
+            kernel-devel rpmdevtools rpm-build \
+            rsync tree kmod \
+            systemd-devel bzip2-devel \
+            rdma-core-devel \
+            librdkafka-devel \
+            corosync-devel
+
+      - name: Detect installed kernel headers version
+        run: |
+          KERN_VER=$(ls /usr/src/kernels | head -1)
+          echo "KERN_VER=${KERN_VER}" >> $GITHUB_ENV
+          echo "KSRC=/usr/src/kernels/${KERN_VER}" >> $GITHUB_ENV
+
+      - name: Build full target tree (modules + TOMA + userspace tools)
+        run: |
+          make IM_SERVER=1 \
+               KERN_VER="${KERN_VER}" \
+               _KSRC="${KSRC}" \
+               OFED_VER_STRING=none \
+               VERBOSE=false \
+               all
+
+      - name: Build target RPM
+        run: |
+          KERN_VER="${KERN_VER}" \
+          OFED_VER_STRING=none \
+          ./mk_target_rpm "${KERN_VER}" none
+
+      - name: Verify RPM was produced
+        run: |
+          echo "=== Produced RPMs ==="
+          ls -lh nvmesh-*.rpm
+          test -n "$(ls nvmesh-target-*.rpm 2>/dev/null)"
+
+      - name: Upload target RPM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpm-packages-target
+          path: nvmesh-target-*.rpm
           retention-days: 7
